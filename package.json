@@ -1,0 +1,22 @@
+{
+	"name": "clubhouse-releasenotes-github-action",
+	"version": "0.0.1",
+	"description": "Scienta's take on release notes using Clubhouse",
+	"main": "index.js",
+	"scripts": {
+		"build": "ncc build index.js -o dist"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ScientaNL/clubhouse-releasenotes-github-action.git"
+	},
+	"author": "Scienta",
+	"license": "MIT",
+	"dependencies": {
+		"@actions/core": "^1.2.6",
+		"@actions/github": "^4.0.0"
+	},
+	"devDependencies": {
+		"@vercel/ncc": "^0.25.1"
+	}
+}

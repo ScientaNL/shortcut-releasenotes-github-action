@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  node:
+    container_name: clubhouse-releasenotes-github-action
+    image: "node:12"
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      NODE_ENV: development
+#      INPUT_GITHUB-TOKEN: "${GITHUB_TOKEN}"
+#      INPUT_REPOSITORY-OWNER: "${REPOSITORY_OWNER}"
+#      INPUT_REPOSITORY-NAME: "${REPOSITORY_NAME}"
+#      INPUT_HEAD-BRANCH: "${HEAD_BRANCH}"
+#      INPUT_BASE-BRANCH-FILTERS: "${BASE_BRANCH_FILTERS}"
+#      INPUT_PR-TITLE: "${PR_TITLE}"
+#      INPUT_PR-BODY: "${PR_BODY}"
+#      INPUT_PR-LABELS: "${PR_LABELS}"
+    volumes:
+      - ./:/home/node/app
+    command: "tail -f /dev/null"
