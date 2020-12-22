@@ -1,10 +1,10 @@
 name: 'Clubhouse release notes github action'
 description: "Scienta's take on release notes using Clubhouse"
 author: 'Scienta'
-#inputs:
-#  github-token:
-#    description: 'Github Actions Token or Personal Access Token (PAT)'
-#    required: true
+inputs:
+  github-token:
+    description: 'Github Actions Token or Personal Access Token (PAT)'
+    required: true
 #  repository-owner:
 #    description: 'Owner of the repository'
 #    required: true

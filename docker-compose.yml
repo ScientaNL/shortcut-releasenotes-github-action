@@ -7,7 +7,7 @@ services:
     working_dir: /home/node/app
     environment:
       NODE_ENV: development
-#      INPUT_GITHUB-TOKEN: "${GITHUB_TOKEN}"
+      INPUT_GITHUB-TOKEN: "${GITHUB_TOKEN}"
 #      INPUT_REPOSITORY-OWNER: "${REPOSITORY_OWNER}"
 #      INPUT_REPOSITORY-NAME: "${REPOSITORY_NAME}"
 #      INPUT_HEAD-BRANCH: "${HEAD_BRANCH}"
