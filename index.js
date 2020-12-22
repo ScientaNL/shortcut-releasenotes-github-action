@@ -4,7 +4,7 @@ const core = require('@actions/core');
 const octokit = github.getOctokit(core.getInput('github-token'));
 
 async function run() {
-    core.debug(
+    core.info(
         JSON.stringify(github.context.payload)
     );
 }
