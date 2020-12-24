@@ -17668,7 +17668,6 @@ class ReleaseNotesGenerator {
                 }
             }
         }
-        console.log("We komen hierrrr");
         if (releaseNotesStoriesMap.size) {
             try {
                 const updatedStories = await this.bulkAddVersionLabelToStories([...releaseNotesStoriesMap.keys()], versionLabel);
