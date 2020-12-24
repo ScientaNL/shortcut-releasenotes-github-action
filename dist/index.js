@@ -17659,6 +17659,7 @@ class ReleaseNotesGenerator {
                 }
             }
             catch (error) {
+                // @todo instanceof check on ClientError is not working...
                 if (error.response && error.response.status === 404) {
                     core_1.info(`Could not find story: ${storyId}`);
                 }

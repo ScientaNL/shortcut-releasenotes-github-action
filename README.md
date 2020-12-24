@@ -12,12 +12,32 @@ In the body of a release you can add a release notes tag. This tag will be subst
 ## Example:
 While creating a release in Github, add a tag to the release message body. Use name of the predecessor of this release. All issues between the current release and it's given predecessor will added to this release notes.
 ```md
-[rn > 7.2.1]
+[rn > 7.2.0]
 ```
+
+Will result in: 👇👇👇
+----------------------------
+# Release Notes 7.2.1
+_Release notes are created between releases `7.2.0` and `7.2.1`._
+- 👉 [View stories in Clubhouse](https://app.clubhouse.io/app/label/442)
+- 👉 [View Github diff](https://github.com/owner/repo/compare/7.2.1...7.2.0)
+
+# 🚀 Features
+- Create new login page [[236]](https://app.clubhouse.io/app/story/236)
+- Add new editor [[237]](https://app.clubhouse.io/app/story/237)
+
+# 🐛 Bugs
+- Fix broken redirect [[125]](https://app.clubhouse.io/app/story/125)
+- undefined is definitely not a function [[308]](https://app.clubhouse.io/app/story/308)
+-------------------------------
+👆👆👆
 
 # Development
 
 ## Run Docker Stack
+- Create a `.env` file based on the template. The payload of a github action can be retrieved by using this
+
+
 ```
 docker-compose  up -d --force-recreate --remove-orphans
 ```
@@ -71,3 +91,38 @@ The following variables are available:
 | `repository-name`        | Repository where releases are made from                                         |
 | `releasenotes-template`  | ejs-driven markdown template to render the release notes                        |
 | `no-stories-template`    | ejs-driven markdown template to render if there are no completed stories found  |
+
+## action example
+```
+name: Generate release notes
+on:
+  release:
+    types: [ created, edited ]
+jobs:
+  generate-releasenotes:
+    name: Generate release notes
+    runs-on: ubuntu-latest
+    steps:
+      - $ref: ./partials/checkout.yml
+
+      - name: Read release notes markdown template
+        id: releasenotes-template
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./.github/release-notes/releas-notes.template.md
+      - name: Read release notes no stories markdown template
+        id: no-stories-template
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: .github/release-notes/no-stories-found.template.md
+
+      - name: Generate release notes
+        uses: ScientaNL/clubhouse-releasenotes-github-action@main
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          clubhouse-token: "${{ secrets.CLUBHOUSE_API }}"
+          repository-owner: "owner"
+          repository-name: "repo"
+          releasenotes-template: "${{ steps.releasenotes-template.outputs.content }}"
+          no-stories-template: "${{ steps.no-stories-template.outputs.content }}"
+```
