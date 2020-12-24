@@ -10,7 +10,7 @@ Use this action on a release trigger.
 In the body of a release you can add a release notes tag. This tag will be substituted with the generated release notes markdown.
 
 ## Example:
-While creating a release in Github, add a tag to the release message body. Use name of the predecessor of this release. All issues between the current release and it's given predecessor will added to this release notes.
+While creating a release in Github, add a tag to the release message body. Use the name of the predecessor of this release. All issues between the current release and it's given predecessor will added to the release notes.
 ```md
 [rn > 7.2.0]
 ```
@@ -35,9 +35,9 @@ _Release notes are created between releases `7.2.0` and `7.2.1`._
 # Development
 
 ## Run Docker Stack
-- Create a `.env` file based on the template. The payload of a github action can be retrieved by using this
+Create a `.env` file based on the template. The payload of a github action can be retrieved by using [this action](https://github.com/marketplace/actions/debug-action) in your workflow
 
-
+Run using docker-compose:
 ```
 docker-compose  up -d --force-recreate --remove-orphans
 ```
