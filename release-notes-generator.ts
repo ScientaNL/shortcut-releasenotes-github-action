@@ -16,7 +16,7 @@ type ClubhouseBulkUpdateStories = {
 }
 
 export class ReleaseNotesGenerator {
-	private issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)\b (?:\[?)ch(?:-?)(\d+)(?:\]?)/gi;
+	private issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b (?:\[?)ch(?:-?)(\d+)(?:\]?)/gi;
 	private prRegex = /pull request \#(\d+)/i;
 
 	constructor(
