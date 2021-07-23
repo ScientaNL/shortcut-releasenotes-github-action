@@ -3,7 +3,6 @@ services:
   node:
     container_name: clubhouse-releasenotes-github-action
     image: "node:12"
-    user: "node"
     working_dir: /home/node/app
     environment:
       NODE_ENV: development
