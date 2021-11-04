@@ -17629,7 +17629,7 @@ class ReleaseNotesGenerator {
         this.head = head;
         this.base = base;
         this.templates = templates;
-        this.issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b (?:\[?)ch(?:-?)(\d+)(?:\]?)/gi;
+        this.issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b (?:\[?)(?:ch|sc)(?:-?)(\d+)(?:\]?)/gi;
         this.prRegex = /pull request \#(\d+)/i;
     }
     async generate() {
