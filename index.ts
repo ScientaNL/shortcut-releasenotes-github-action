@@ -50,19 +50,25 @@ class ReleaseNotesAction {
 					if (e.response && e.response.url) {
 						logError(e.response?.url);
 					}
+					setFailed(e);
 					return substring;
 				}
 			},
 		);
 
-		logInfo(replacedBody);
+		logInfo('Replaced body:' + replacedBody);
 
-		await this.githubApi.rest.repos.updateRelease({
-			owner: this.repositoryOwner,
-			repo: this.repository,
-			release_id: payload.release.id,
-			body: replacedBody,
-		});
+		try {
+			await this.githubApi.rest.repos.updateRelease({
+				owner: this.repositoryOwner,
+				repo: this.repository,
+				release_id: payload.release.id,
+				body: replacedBody,
+			});
+		} catch (e) {
+			logError(e);
+			throw new Error('Failed to update release');
+		}
 
 		logInfo("Update release notes to release");
 	}
@@ -79,4 +85,7 @@ const action = new ReleaseNotesAction(
 	},
 );
 
-action.run().catch((error) => setFailed(error.message));
+action.run().catch((error) => {
+	logError('Action failed.');
+	setFailed(error.message);
+});

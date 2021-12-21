@@ -1,4 +1,4 @@
-import { info as logInfo } from '@actions/core';
+import { debug, info } from '@actions/core';
 import { GitHub } from '@actions/github/lib/utils';
 import { components } from "@octokit/openapi-types";
 import { Label, ShortcutClient, Story as FullStory, StorySlim } from '@useshortcut/client';
@@ -27,6 +27,10 @@ export class ReleaseNotesGenerator {
 	}
 
 	public async generate() {
+		debug(`Starting release notes generation`);
+		debug(`Repository: ${this.repositoryOwner}/${this.repository}`);
+		debug(`Between: ${this.base} and ${this.head}`);
+
 		let commits = [];
 		try {
 			commits = await this.getCommits();
@@ -49,14 +53,14 @@ export class ReleaseNotesGenerator {
 
 				if (story.completed) {
 					releaseNotesStoriesMap.set(storyId, story);
-					logInfo(`Story found: ${story.name}`);
+					info(`Story found: ${story.name}`);
 				} else {
-					logInfo(`Story found but not completed. Ignore: ${story.name}`);
+					info(`Story found but not completed. Ignore: ${story.name}`);
 				}
 			} catch (error) {
 				// @todo instanceof check on ClientError is not working...
 				if (error.response && error.response.status === 404) {
-					logInfo(`Could not find story: ${storyId}`);
+					info(`Could not find story: ${storyId}`);
 				} else {
 					throw error;
 				}
@@ -78,14 +82,16 @@ export class ReleaseNotesGenerator {
 				throw new Error(`Could not add version label to stories`);
 			}
 		} else {
-			logInfo(`No stories to add version label to.`);
+			info(`No stories to add version label to.`);
 		}
 
 		if (releaseNotesStoriesMap.size) {
+			info(`Rendering release notes for ${releaseNotesStoriesMap.size} stories`);
 			const label = this.getVersionLabelFromStories(versionLabel, releaseNotesStoriesMap);
 
 			return await this.createReleaseNotes([...releaseNotesStoriesMap.values()], label);
 		} else {
+			info('No stories, rendering noStories template');
 			return render(this.templates.noStories, {
 				head: this.head,
 				base: this.base,
@@ -97,22 +103,30 @@ export class ReleaseNotesGenerator {
 
 	private async* parseCommits(commits: GithubCommit[]): AsyncGenerator<number> {
 		for (const commit of commits) {
-			for (const storyId of await this.getIssuesFromString(commit.commit.message)) {
+			let commitMessage: string = commit.commit.message;
+			for (const storyId of await this.getIssuesFromString(commitMessage)) {
 				yield storyId;
 			}
 
 			if (commit.parents.length >= 2) {
-				const match = commit.commit.message.match(this.prRegex);
+				const match = commitMessage.match(this.prRegex);
 				if (match) {
+					debug(`Commit matched PR regex with message: ${commitMessage.slice(0, 100)}`);
 					const PRId = parseInt(match[1]);
-					yield* this.parsePRs(PRId);
+					yield* this.parsePR(PRId);
 				}
 			}
 		}
 	}
 
-	private async* parsePRs(PRId: number): AsyncGenerator<number> {
-		const PR = await this.getPR(PRId);
+	private async* parsePR(PRId: number): AsyncGenerator<number> {
+		let PR: GithubPR;
+		try {
+			PR = await this.getPR(PRId);
+		} catch (e) {
+			info(`Could not get PR ${PRId}`);
+			return;
+		}
 
 		for (const storyId of await this.getIssuesFromString(PR.title + "\n" + PR.body)) {
 			yield storyId;
@@ -136,6 +150,7 @@ export class ReleaseNotesGenerator {
 	}
 
 	private async getCommits(): Promise<GithubCommit[]> {
+		debug(`Getting commits`);
 		return (await this.githubApi.rest.repos.compareCommits({
 			owner: this.repositoryOwner,
 			repo: this.repository,
@@ -145,6 +160,7 @@ export class ReleaseNotesGenerator {
 	}
 
 	private async getPR(PRId: number): Promise<GithubPR> {
+		debug(`Getting PR: ${PRId}`);
 		return (await this.githubApi.rest.pulls.get({
 			owner: this.repositoryOwner,
 			repo: this.repository,
@@ -153,6 +169,7 @@ export class ReleaseNotesGenerator {
 	}
 
 	private async getPRComments(PRId: number): Promise<GithubPRComment[]> {
+		debug(`Getting comments for PR: ${PRId}`);
 		// @ts-ignore There is a mismatch between the author_association in octokit rest-endpoint and octokit webhooks-types
 		return (await this.githubApi.rest.issues.listComments({
 			owner: this.repositoryOwner,
@@ -162,6 +179,7 @@ export class ReleaseNotesGenerator {
 	}
 
 	private async getShortcutStory(storyId: number): Promise<Story> {
+		debug(`Getting shortcut story: ${storyId}`);
 		return (await this.shortcutApi.getStory(storyId)).data;
 	}
 
@@ -169,6 +187,7 @@ export class ReleaseNotesGenerator {
 		storiesToVersionLabel: number[],
 		versionLabel: string,
 	): Promise<StorySlim[]> {
+		debug(`Bulk adding version label '${versionLabel}' to ${storiesToVersionLabel.length} shortcut stories`);
 		return (await this.shortcutApi.updateMultipleStories({
 			story_ids: storiesToVersionLabel,
 			labels_add: [{name: versionLabel}],

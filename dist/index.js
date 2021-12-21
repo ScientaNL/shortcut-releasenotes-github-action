@@ -23,6 +23,9 @@ class ReleaseNotesGenerator {
         this.prRegex = /pull request #(\d+)/i;
     }
     async generate() {
+        (0, core_1.debug)(`Starting release notes generation`);
+        (0, core_1.debug)(`Repository: ${this.repositoryOwner}/${this.repository}`);
+        (0, core_1.debug)(`Between: ${this.base} and ${this.head}`);
         let commits = [];
         try {
             commits = await this.getCommits();
@@ -73,10 +76,12 @@ class ReleaseNotesGenerator {
             (0, core_1.info)(`No stories to add version label to.`);
         }
         if (releaseNotesStoriesMap.size) {
+            (0, core_1.info)(`Rendering release notes for ${releaseNotesStoriesMap.size} stories`);
             const label = this.getVersionLabelFromStories(versionLabel, releaseNotesStoriesMap);
             return await this.createReleaseNotes([...releaseNotesStoriesMap.values()], label);
         }
         else {
+            (0, core_1.info)('No stories, rendering noStories template');
             return (0, ejs_1.render)(this.templates.noStories, {
                 head: this.head,
                 base: this.base,
@@ -87,20 +92,29 @@ class ReleaseNotesGenerator {
     }
     async *parseCommits(commits) {
         for (const commit of commits) {
-            for (const storyId of await this.getIssuesFromString(commit.commit.message)) {
+            let commitMessage = commit.commit.message;
+            for (const storyId of await this.getIssuesFromString(commitMessage)) {
                 yield storyId;
             }
             if (commit.parents.length >= 2) {
-                const match = commit.commit.message.match(this.prRegex);
+                const match = commitMessage.match(this.prRegex);
                 if (match) {
+                    (0, core_1.debug)(`Commit matched PR regex with message: ${commitMessage.slice(0, 100)}`);
                     const PRId = parseInt(match[1]);
-                    yield* this.parsePRs(PRId);
+                    yield* this.parsePR(PRId);
                 }
             }
         }
     }
-    async *parsePRs(PRId) {
-        const PR = await this.getPR(PRId);
+    async *parsePR(PRId) {
+        let PR;
+        try {
+            PR = await this.getPR(PRId);
+        }
+        catch (e) {
+            (0, core_1.info)(`Could not get PR ${PRId}`);
+            return;
+        }
         for (const storyId of await this.getIssuesFromString(PR.title + "\n" + PR.body)) {
             yield storyId;
         }
@@ -119,6 +133,7 @@ class ReleaseNotesGenerator {
         }
     }
     async getCommits() {
+        (0, core_1.debug)(`Getting commits`);
         return (await this.githubApi.rest.repos.compareCommits({
             owner: this.repositoryOwner,
             repo: this.repository,
@@ -127,6 +142,7 @@ class ReleaseNotesGenerator {
         })).data.commits;
     }
     async getPR(PRId) {
+        (0, core_1.debug)(`Getting PR: ${PRId}`);
         return (await this.githubApi.rest.pulls.get({
             owner: this.repositoryOwner,
             repo: this.repository,
@@ -134,17 +150,20 @@ class ReleaseNotesGenerator {
         })).data;
     }
     async getPRComments(PRId) {
+        (0, core_1.debug)(`Getting comments for PR: ${PRId}`);
         // @ts-ignore There is a mismatch between the author_association in octokit rest-endpoint and octokit webhooks-types
         return (await this.githubApi.rest.issues.listComments({
             owner: this.repositoryOwner,
             repo: this.repository,
-            issue_number: PRId
+            issue_number: PRId,
         })).data;
     }
     async getShortcutStory(storyId) {
+        (0, core_1.debug)(`Getting shortcut story: ${storyId}`);
         return (await this.shortcutApi.getStory(storyId)).data;
     }
     async bulkAddVersionLabelToStories(storiesToVersionLabel, versionLabel) {
+        (0, core_1.debug)(`Bulk adding version label '${versionLabel}' to ${storiesToVersionLabel.length} shortcut stories`);
         return (await this.shortcutApi.updateMultipleStories({
             story_ids: storiesToVersionLabel,
             labels_add: [{ name: versionLabel }],
@@ -176,7 +195,7 @@ class ReleaseNotesGenerator {
         });
     }
     getVersionLabelFromStories(versionLabel, releaseNotesStoriesMap) {
-        for (const [storyId, story] of releaseNotesStoriesMap) {
+        for (const story of releaseNotesStoriesMap.values()) {
             const label = story.labels.find((label) => label.name === versionLabel);
             if (label) {
                 return label;
@@ -13853,9 +13872,6 @@ const github_1 = __nccwpck_require__(5438);
 const client_1 = __nccwpck_require__(5914);
 const string_replace_async_1 = __nccwpck_require__(8028);
 const release_notes_generator_1 = __nccwpck_require__(8312);
-// declare global {
-// 	type File = any;
-// }
 class ReleaseNotesAction {
     constructor(githubApi, shortcutApi, repositoryOwner, repository, templates) {
         this.githubApi = githubApi;
@@ -13881,16 +13897,23 @@ class ReleaseNotesAction {
                 if (e.response && e.response.url) {
                     (0, core_1.error)(e.response?.url);
                 }
+                (0, core_1.setFailed)(e);
                 return substring;
             }
         });
-        (0, core_1.info)(replacedBody);
-        await this.githubApi.rest.repos.updateRelease({
-            owner: this.repositoryOwner,
-            repo: this.repository,
-            release_id: payload.release.id,
-            body: replacedBody,
-        });
+        (0, core_1.info)('Replaced body:' + replacedBody);
+        try {
+            await this.githubApi.rest.repos.updateRelease({
+                owner: this.repositoryOwner,
+                repo: this.repository,
+                release_id: payload.release.id,
+                body: replacedBody,
+            });
+        }
+        catch (e) {
+            (0, core_1.error)(e);
+            (0, core_1.setFailed)('Failed to update release');
+        }
         (0, core_1.info)("Update release notes to release");
     }
 }
@@ -13898,7 +13921,10 @@ const action = new ReleaseNotesAction((0, github_1.getOctokit)((0, core_1.getInp
     releasenotes: (0, core_1.getInput)("releasenotes-template"),
     noStories: (0, core_1.getInput)("no-stories-template"),
 });
-action.run().catch((error) => (0, core_1.setFailed)(error.message));
+action.run().catch((error) => {
+    (0, core_1.error)('Action failed.');
+    (0, core_1.setFailed)(error.message);
+});
 //# sourceMappingURL=index.js.map
 })();
 
