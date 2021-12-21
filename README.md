@@ -72,8 +72,7 @@ The following variables are available:
 | `head`                   | Tag name of the release                                                              | `string`                                                  |
 | `base`                   | Tag name of the version to base the release on                                       | `string`                                                  |
 | `stories`                | Shortcut stories                                                                     | `Story[]`                                                 |
-| `labelVersionFilter`     | Filter a Label[] to return only *
-other* version labels. It's own version is omitted. | `(labels: Label[]) => Label[]`                            |
+| `labelVersionFilter`     | Filter a Label[] to return only *other* version labels. It's own version is omitted. | `(labels: Label[]) => Label[]`                            |
 | `createStoryTypeFilter`  | Creates a callback which can be used in `stories.filter` to filter on a story type.  | `(storyType: string) => ((stories: Story[]) => Story[])`  |
 | `repositoryOwner`        | Github repository owner                                                              | `string`                                                  |
 | `repository`             | Github repository                                                                    | `string`                                                  |
