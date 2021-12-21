@@ -1,11 +1,16 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es2020",
-		"sourceMap": true
+		"module": "CommonJS",
+		"moduleResolution": "Node",
+		"target": "ES2020",
+		"sourceMap": true,
+		"lib": [
+			"ES2020",
+			"ES2020.String"
+		],
+		"outDir": "dist/.ts/"
 	},
 	"exclude": [
 		"node_modules"
-	],
-	"lib": ["es2020", "es2020.string"]
+	]
 }

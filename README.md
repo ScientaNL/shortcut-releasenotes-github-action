@@ -1,13 +1,16 @@
-# clubhouse-releasenotes-github-action
-Scienta's take on release notes using Clubhouse:
+# shortcut-releasenotes-github-action
+
+Scienta's take on release notes using Shortcut:
+
 - Decide which version is the predecessor of this release.
 - Fetch stories from commit messages, pull requests and the comments on those PRs.
 - Add a version label to all completed stories.
 - Render all stories as release notes based on a given `ejs` template.
 
 # Usage with Github Actions
-Use this action on a release trigger.
-In the body of a release you can add a release notes tag. This tag will be substituted with the generated release notes markdown.
+
+Use this action on a release trigger. In the body of a release you can add a release notes tag. This tag will be substituted with the
+generated release notes markdown.
 
 ## Example:
 While creating a release in Github, add a tag to the release message body. Use the name of the predecessor of this release. All issues between the current release and it's given predecessor will added to the release notes.
@@ -19,16 +22,19 @@ Will result in: 👇👇👇
 ----------------------------
 # Release Notes 7.2.1
 _Release notes are created between releases `7.2.0` and `7.2.1`._
-- 👉 [View stories in Clubhouse](https://app.clubhouse.io/app/label/442)
+
+- 👉 [View stories in Shortcut](https://app.shortcut.com/app/label/442)
 - 👉 [View Github diff](https://github.com/owner/repo/compare/7.2.1...7.2.0)
 
 # 🚀 Features
-- Create new login page [[236]](https://app.clubhouse.io/app/story/236)
-- Add new editor [[237]](https://app.clubhouse.io/app/story/237)
+
+- Create new login page [[236]](https://app.shortcut.com/app/story/236)
+- Add new editor [[237]](https://app.shortcut.com/app/story/237)
 
 # 🐛 Bugs
-- Fix broken redirect [[125]](https://app.clubhouse.io/app/story/125)
-- undefined is definitely not a function [[308]](https://app.clubhouse.io/app/story/308)
+
+- Fix broken redirect [[125]](https://app.shortcut.com/app/story/125)
+- undefined is definitely not a function [[308]](https://app.shortcut.com/app/story/308)
 -------------------------------
 👆👆👆
 
@@ -65,7 +71,7 @@ The following variables are available:
 |--------------------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------|
 | `head`                   | Tag name of the release                                                              | `string`                                                  |
 | `base`                   | Tag name of the version to base the release on                                       | `string`                                                  |
-| `stories`                | Clubhouse stories                                                                    | `Story[]`                                                 |
+| `stories`                | Shortcut stories                                                                     | `Story[]`                                                 |
 | `labelVersionFilter`     | Filter a Label[] to return only *other* version labels. It's own version is omitted. | `(labels: Label[]) => Label[]`                            |
 | `createStoryTypeFilter`  | Creates a callback which can be used in `stories.filter` to filter on a story type.  | `(storyType: string) => ((stories: Story[]) => Story[])`  |
 | `repositoryOwner`        | Github repository owner                                                              | `string`                                                  |
@@ -86,7 +92,7 @@ The following variables are available:
 | Input                    | Description                                                                     |
 |--------------------------|---------------------------------------------------------------------------------|
 | `github-token`           | Github Personal Access Token                                                    |
-| `clubhouse-token`        | Clubhouse API token                                                             |
+| `clubhouse-token`        | Shortcut API token                                                              |
 | `repository-owner`       | Repository owner where releases are made from                                   |
 | `repository-name`        | Repository where releases are made from                                         |
 | `releasenotes-template`  | ejs-driven markdown template to render the release notes                        |
