@@ -2,7 +2,7 @@ version: "3.8"
 services:
   node:
     container_name: clubhouse-releasenotes-github-action
-    image: "node:12"
+    image: "node:16"
     working_dir: /home/node/app
     environment:
       NODE_ENV: development

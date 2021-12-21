@@ -1,25 +1,30 @@
-import {getInput, setFailed, error as logError, info as logInfo} from '@actions/core';
-import {context, getOctokit} from "@actions/github";
-import {EventPayloads} from '@octokit/webhooks';
-import replaceAsync = require("string-replace-async");
-import {GitHub} from "@actions/github/lib/utils";
-import {default as Clubhouse} from 'clubhouse-lib';
-import {ReleaseNotesGenerator} from "./release-notes-generator";
+import { error as logError, getInput, info as logInfo, setFailed } from '@actions/core';
+import { context, getOctokit } from "@actions/github";
+import { GitHub } from '@actions/github/lib/utils';
+import { ReleaseReleasedEvent } from '@octokit/webhooks-types';
+import { ShortcutClient } from "@useshortcut/client";
+import { default as replaceAsync } from 'string-replace-async';
+import { ReleaseNotesGenerator } from "./release-notes-generator";
+
+// Shortcut's types depend on the DOM :(
+declare global {
+	type File = any;
+}
 
 class ReleaseNotesAction {
 	private releaseNotesRegex = /\[rn > ([-._\w]*?)\]/;
 
 	constructor(
 		private githubApi: InstanceType<typeof GitHub>,
-		private clubhouseApi: Clubhouse<any, any>,
+		private shortcutApi: ShortcutClient<any>,
 		private repositoryOwner: string,
 		private repository: string,
-		private templates: { releasenotes: string, noStories: string }
+		private templates: { releasenotes: string, noStories: string },
 	) {
 	}
 
 	public async run() {
-		const payload = context.payload as EventPayloads.WebhookPayloadRelease;
+		const payload = context.payload as ReleaseReleasedEvent;
 
 		if (!payload || !payload.release || typeof payload.release.body !== "string") {
 			throw new Error("No release body available. Unable to generate release notes");
@@ -32,28 +37,31 @@ class ReleaseNotesAction {
 				try {
 					const generator = new ReleaseNotesGenerator(
 						this.githubApi,
-						this.clubhouseApi,
+						this.shortcutApi,
 						this.repositoryOwner,
 						this.repository,
 						head,
 						base,
-						this.templates
+						this.templates,
 					);
 					return await generator.generate();
 				} catch (e) {
 					logError(e);
+					if (e.response && e.response.url) {
+						logError(e.response?.url);
+					}
 					return substring;
 				}
-			}
+			},
 		);
 
 		logInfo(replacedBody);
 
-		await this.githubApi.repos.updateRelease({
+		await this.githubApi.rest.repos.updateRelease({
 			owner: this.repositoryOwner,
 			repo: this.repository,
 			release_id: payload.release.id,
-			body: replacedBody
+			body: replacedBody,
 		});
 
 		logInfo("Update release notes to release");
@@ -62,13 +70,13 @@ class ReleaseNotesAction {
 
 const action = new ReleaseNotesAction(
 	getOctokit(getInput('github-token')),
-	Clubhouse.create(getInput('clubhouse-token')),
+	new ShortcutClient(getInput('clubhouse-token')),
 	getInput("repository-owner"),
 	getInput("repository-name"),
 	{
 		releasenotes: getInput("releasenotes-template"),
-		noStories: getInput("no-stories-template")
-	}
+		noStories: getInput("no-stories-template"),
+	},
 );
 
 action.run().catch((error) => setFailed(error.message));
