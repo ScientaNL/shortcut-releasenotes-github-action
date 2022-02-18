@@ -134,12 +134,15 @@ class ReleaseNotesGenerator {
     }
     async getCommits() {
         (0, core_1.debug)(`Getting commits`);
-        return (await this.githubApi.rest.repos.compareCommits({
+        const commits = await this.githubApi.paginate(this.githubApi.rest.repos.compareCommits, {
             owner: this.repositoryOwner,
             repo: this.repository,
             base: this.base,
             head: this.head,
-        })).data.commits;
+            per_page: 100,
+        }, (response) => response.data.commits);
+        (0, core_1.debug)(`Got ${commits.length} commits`);
+        return commits;
     }
     async getPR(PRId) {
         (0, core_1.debug)(`Getting PR: ${PRId}`);
@@ -13912,7 +13915,7 @@ class ReleaseNotesAction {
         }
         catch (e) {
             (0, core_1.error)(e);
-            (0, core_1.setFailed)('Failed to update release');
+            throw new Error('Failed to update release');
         }
         (0, core_1.info)("Update release notes to release");
     }
