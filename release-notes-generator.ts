@@ -151,12 +151,19 @@ export class ReleaseNotesGenerator {
 
 	private async getCommits(): Promise<GithubCommit[]> {
 		debug(`Getting commits`);
-		return (await this.githubApi.rest.repos.compareCommits({
-			owner: this.repositoryOwner,
-			repo: this.repository,
-			base: this.base,
-			head: this.head,
-		})).data.commits;
+		const commits: GithubCommit[] = await this.githubApi.paginate(
+			this.githubApi.rest.repos.compareCommits,
+			{
+				owner: this.repositoryOwner,
+				repo: this.repository,
+				base: this.base,
+				head: this.head,
+				per_page: 100,
+			},
+			(response) => response.data.commits
+		);
+		debug(`Got ${commits.length} commits`);
+		return commits;
 	}
 
 	private async getPR(PRId: number): Promise<GithubPR> {
