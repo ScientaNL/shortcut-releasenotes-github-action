@@ -99,7 +99,7 @@ class ReleaseNotesGenerator {
             }
             const relatedPullRequests = await this.getPRsForCommit(commit.sha);
             for (const relatedPullRequest of relatedPullRequests) {
-                (0, core_1.debug)(` - Found related pull request ${relatedPullRequest.id}`);
+                (0, core_1.debug)(` - Found related pull request ${relatedPullRequest.number}`);
                 yield* this.parsePR(relatedPullRequest);
             }
         }
@@ -108,9 +108,10 @@ class ReleaseNotesGenerator {
         for (const storyId of await this.getIssuesFromString(PR.title + "\n" + PR.body)) {
             yield storyId;
         }
-        const comments = await this.getPRComments(PR.id);
+        const comments = await this.getPRComments(PR.number);
         for (const comment of comments) {
             for (const storyId of await this.getIssuesFromString(comment.body)) {
+                (0, core_1.debug)(` - Found story ${storyId} for pull request ${PR.number}`);
                 yield storyId;
             }
         }
