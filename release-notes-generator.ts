@@ -6,14 +6,14 @@ import { render } from 'ejs';
 
 type GithubCommit = components["schemas"]["commit"];
 type GithubPR = components["schemas"]["pull-request"];
+type GithubPRSimple = components["schemas"]["pull-request-simple"];
 type GithubPRComment = components["schemas"]["issue-comment"];
 
 type Story = StorySlim | FullStory; // partials 😱
 type ShortCutStoryGithubItemsMap = Map<number, StorySlim | Story>;
 
 export class ReleaseNotesGenerator {
-	private issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b (?:\[?)(?:ch|sc)(?:-?)(\d+)(?:\]?)/gi;
-	private prRegex = /pull request #(\d+)/i;
+	private issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b \[?(?:ch|sc)-?(\d+)]?/gi;
 
 	constructor(
 		private githubApi: InstanceType<typeof GitHub>,
@@ -103,42 +103,32 @@ export class ReleaseNotesGenerator {
 
 	private async* parseCommits(commits: GithubCommit[]): AsyncGenerator<number> {
 		for (const commit of commits) {
+			debug(`Parsing commit ${commit.sha}`);
 			let commitMessage: string = commit.commit.message;
 			for (const storyId of await this.getIssuesFromString(commitMessage)) {
+				debug(` - Found story ${storyId}`);
 				yield storyId;
 			}
 
-			if (commit.parents.length >= 2) {
-				const match = commitMessage.match(this.prRegex);
-				if (match) {
-					debug(`Commit matched PR regex with message: ${commitMessage.slice(0, 100)}`);
-					const PRId = parseInt(match[1]);
-					yield* this.parsePR(PRId);
-				}
+			const relatedPullRequests = await this.getPRsForCommit(commit.sha);
+			for (const relatedPullRequest of relatedPullRequests) {
+				debug(` - Found related pull request ${relatedPullRequest.id}`);
+				yield* this.parsePR(relatedPullRequest);
 			}
 		}
 	}
 
-	private async* parsePR(PRId: number): AsyncGenerator<number> {
-		let PR: GithubPR;
-		try {
-			PR = await this.getPR(PRId);
-		} catch (e) {
-			info(`Could not get PR ${PRId}`);
-			return;
-		}
-
+	private async* parsePR(PR: GithubPRSimple): AsyncGenerator<number> {
 		for (const storyId of await this.getIssuesFromString(PR.title + "\n" + PR.body)) {
 			yield storyId;
 		}
 
-		if (PR.comments) {
-			const comments = await this.getPRComments(PRId);
+		const comments = await this.getPRComments(PR.id);
 
-			for (const comment of comments) {
-				for (const storyId of await this.getIssuesFromString(comment.body)) {
-					yield storyId;
-				}
+		for (const comment of comments) {
+			for (const storyId of await this.getIssuesFromString(comment.body)) {
+				debug(` - Found story ${storyId} for pull request ${PR.id}`);
+				yield storyId;
 			}
 		}
 	}
@@ -160,29 +150,29 @@ export class ReleaseNotesGenerator {
 				head: this.head,
 				per_page: 100,
 			},
-			(response) => response.data.commits
+			(response) => response.data.commits,
 		);
 		debug(`Got ${commits.length} commits`);
 		return commits;
 	}
 
-	private async getPR(PRId: number): Promise<GithubPR> {
-		debug(`Getting PR: ${PRId}`);
-		return (await this.githubApi.rest.pulls.get({
+	private async getPRsForCommit(commit_sha: string) {
+		const response = await this.githubApi.rest.repos.listPullRequestsAssociatedWithCommit({
 			owner: this.repositoryOwner,
 			repo: this.repository,
-			pull_number: PRId,
-		})).data;
+			commit_sha: commit_sha,
+		});
+		return response.data;
 	}
 
 	private async getPRComments(PRId: number): Promise<GithubPRComment[]> {
 		debug(`Getting comments for PR: ${PRId}`);
-		// @ts-ignore There is a mismatch between the author_association in octokit rest-endpoint and octokit webhooks-types
-		return (await this.githubApi.rest.issues.listComments({
+		const response = await this.githubApi.rest.issues.listComments({
 			owner: this.repositoryOwner,
 			repo: this.repository,
 			issue_number: PRId,
-		})).data;
+		});
+		return response.data;
 	}
 
 	private async getShortcutStory(storyId: number): Promise<Story> {
