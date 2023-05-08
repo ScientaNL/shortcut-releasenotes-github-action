@@ -106,7 +106,7 @@ export class ReleaseNotesGenerator {
 			debug(`Parsing commit ${commit.sha}`);
 			let commitMessage: string = commit.commit.message;
 			for (const storyId of await this.getIssuesFromString(commitMessage)) {
-				debug(` - Found story ${storyId}`);
+				debug(` - Found story ${storyId} in commit message`);
 				yield storyId;
 			}
 
@@ -120,6 +120,7 @@ export class ReleaseNotesGenerator {
 
 	private async* parsePR(PR: GithubPRSimple): AsyncGenerator<number> {
 		for (const storyId of await this.getIssuesFromString(PR.title + "\n" + PR.body)) {
+			debug(` - Found story ${storyId} in pull request ${PR.number} title/body`);
 			yield storyId;
 		}
 
@@ -127,7 +128,7 @@ export class ReleaseNotesGenerator {
 
 		for (const comment of comments) {
 			for (const storyId of await this.getIssuesFromString(comment.body)) {
-				debug(` - Found story ${storyId} for pull request ${PR.number}`);
+				debug(` - Found story ${storyId} in pull request ${PR.number} comment`);
 				yield storyId;
 			}
 		}
@@ -166,7 +167,7 @@ export class ReleaseNotesGenerator {
 	}
 
 	private async getPRComments(PRId: number): Promise<GithubPRComment[]> {
-		debug(`Getting comments for PR: ${PRId}`);
+		debug(`- Getting comments for PR: ${PRId}`);
 		const response = await this.githubApi.rest.issues.listComments({
 			owner: this.repositoryOwner,
 			repo: this.repository,
@@ -176,7 +177,7 @@ export class ReleaseNotesGenerator {
 	}
 
 	private async getShortcutStory(storyId: number): Promise<Story> {
-		debug(`Getting shortcut story: ${storyId}`);
+		debug(`- Getting shortcut story: ${storyId}`);
 		return (await this.shortcutApi.getStory(storyId)).data;
 	}
 
