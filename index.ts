@@ -56,6 +56,11 @@ class ReleaseNotesAction {
 			},
 		);
 
+		if(replacedBody === payload.release.body) {
+			logInfo('Nothing to replace');
+			return;
+		}
+
 		logInfo('Replaced body:' + replacedBody);
 
 		try {
