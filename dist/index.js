@@ -94,7 +94,7 @@ class ReleaseNotesGenerator {
             (0, core_1.debug)(`Parsing commit ${commit.sha}`);
             let commitMessage = commit.commit.message;
             for (const storyId of await this.getIssuesFromString(commitMessage)) {
-                (0, core_1.debug)(` - Found story ${storyId}`);
+                (0, core_1.debug)(` - Found story ${storyId} in commit message`);
                 yield storyId;
             }
             const relatedPullRequests = await this.getPRsForCommit(commit.sha);
@@ -106,12 +106,13 @@ class ReleaseNotesGenerator {
     }
     async *parsePR(PR) {
         for (const storyId of await this.getIssuesFromString(PR.title + "\n" + PR.body)) {
+            (0, core_1.debug)(` - Found story ${storyId} in pull request ${PR.number} title/body`);
             yield storyId;
         }
         const comments = await this.getPRComments(PR.number);
         for (const comment of comments) {
             for (const storyId of await this.getIssuesFromString(comment.body)) {
-                (0, core_1.debug)(` - Found story ${storyId} for pull request ${PR.number}`);
+                (0, core_1.debug)(` - Found story ${storyId} in pull request ${PR.number} comment`);
                 yield storyId;
             }
         }
@@ -142,7 +143,7 @@ class ReleaseNotesGenerator {
         return response.data;
     }
     async getPRComments(PRId) {
-        (0, core_1.debug)(`Getting comments for PR: ${PRId}`);
+        (0, core_1.debug)(`- Getting comments for PR: ${PRId}`);
         const response = await this.githubApi.rest.issues.listComments({
             owner: this.repositoryOwner,
             repo: this.repository,
@@ -151,7 +152,7 @@ class ReleaseNotesGenerator {
         return response.data;
     }
     async getShortcutStory(storyId) {
-        (0, core_1.debug)(`Getting shortcut story: ${storyId}`);
+        (0, core_1.debug)(`- Getting shortcut story: ${storyId}`);
         return (await this.shortcutApi.getStory(storyId)).data;
     }
     async bulkAddVersionLabelToStories(storiesToVersionLabel, versionLabel) {
@@ -17365,6 +17366,10 @@ class ReleaseNotesAction {
                 return substring;
             }
         });
+        if (replacedBody === payload.release.body) {
+            (0, core_1.info)('Nothing to replace');
+            return;
+        }
         (0, core_1.info)('Replaced body:' + replacedBody);
         try {
             await this.githubApi.rest.repos.updateRelease({
