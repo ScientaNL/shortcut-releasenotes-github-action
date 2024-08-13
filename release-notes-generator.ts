@@ -13,7 +13,7 @@ type Story = StorySlim | FullStory; // partials 😱
 type ShortCutStoryGithubItemsMap = Map<number, StorySlim | Story>;
 
 export class ReleaseNotesGenerator {
-	private issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b \[?(?:ch|sc)-?(\d+)]?/gi;
+	private issueRegex = /\[sc-(\d+)]/gi;
 
 	constructor(
 		private githubApi: InstanceType<typeof GitHub>,
