@@ -19,7 +19,7 @@ class ReleaseNotesGenerator {
         this.head = head;
         this.base = base;
         this.templates = templates;
-        this.issueRegex = /\b(?:fixes|fix|closes|closed|finish|finishes)?\b \[?(?:ch|sc)-?(\d+)]?/gi;
+        this.issueRegex = /\[sc-(\d+)]/gi;
     }
     async generate() {
         (0, core_1.debug)(`Starting release notes generation`);
