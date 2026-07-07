@@ -5,9 +5,12 @@ inputs:
   github-token:
     description: 'Github Actions Token or Personal Access Token (PAT)'
     required: true
+  shortcut-token:
+    description: 'Shortcut API token'
+    required: false
   clubhouse-token:
-    description: 'Shortcut token, name for BC reasons'
-    required: true
+    description: 'Deprecated alias for shortcut-token, kept for backwards compatibility'
+    required: false
   repository-owner:
     description: 'Owner of the repository'
     required: true

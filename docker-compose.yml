@@ -1,13 +1,13 @@
 version: "3.8"
 services:
   node:
-    container_name: clubhouse-releasenotes-github-action
+    container_name: shortcut-releasenotes-github-action
     image: "node:16"
     working_dir: /home/node/app
     environment:
       NODE_ENV: development
       INPUT_GITHUB-TOKEN: "${GITHUB_TOKEN}"
-      INPUT_CLUBHOUSE-TOKEN: "${CLUBHOUSE_TOKEN}"
+      INPUT_SHORTCUT-TOKEN: "${SHORTCUT_TOKEN}"
       GITHUB_EVENT_PAYLOAD: "${GITHUB_EVENT_PAYLOAD}"
       INPUT_REPOSITORY-OWNER: "${REPOSITORY_OWNER}"
       INPUT_REPOSITORY-NAME: "${REPOSITORY_NAME}"

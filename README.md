@@ -50,7 +50,7 @@ docker-compose  up -d --force-recreate --remove-orphans
 
 ## install dependencies
 ```
-docker exec -ti clubhouse-releasenotes-github-action yarn
+docker exec -ti shortcut-releasenotes-github-action yarn
 ```
 
 ## Run
@@ -59,7 +59,7 @@ At first I had the simulate-ga added as an yarn script, but both yarn and npm re
 
 Use this bash script instead:
 ```
-docker exec -ti clubhouse-releasenotes-github-action ./simulate-ga.sh
+docker exec -ti shortcut-releasenotes-github-action ./simulate-ga.sh
 ```
 
 # Templating
@@ -92,7 +92,8 @@ The following variables are available:
 | Input                    | Description                                                                     |
 |--------------------------|---------------------------------------------------------------------------------|
 | `github-token`           | Github Personal Access Token                                                    |
-| `clubhouse-token`        | Shortcut API token                                                              |
+| `shortcut-token`         | Shortcut API token                                                              |
+| `clubhouse-token`        | Deprecated alias for `shortcut-token`, kept for backwards compatibility         |
 | `repository-owner`       | Repository owner where releases are made from                                   |
 | `repository-name`        | Repository where releases are made from                                         |
 | `releasenotes-template`  | ejs-driven markdown template to render the release notes                        |
@@ -115,7 +116,7 @@ jobs:
         id: releasenotes-template
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./.github/release-notes/releas-notes.template.md
+          path: ./.github/release-notes/release-notes.template.md
       - name: Read release notes no stories markdown template
         id: no-stories-template
         uses: juliangruber/read-file-action@v1
@@ -123,10 +124,10 @@ jobs:
           path: .github/release-notes/no-stories-found.template.md
 
       - name: Generate release notes
-        uses: ScientaNL/clubhouse-releasenotes-github-action@main
+        uses: ScientaNL/shortcut-releasenotes-github-action@main
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          clubhouse-token: "${{ secrets.CLUBHOUSE_API }}"
+          shortcut-token: "${{ secrets.SHORTCUT_API }}"
           repository-owner: "owner"
           repository-name: "repo"
           releasenotes-template: "${{ steps.releasenotes-template.outputs.content }}"

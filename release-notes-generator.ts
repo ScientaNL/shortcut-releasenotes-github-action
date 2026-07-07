@@ -14,6 +14,7 @@ type ShortCutStoryGithubItemsMap = Map<number, StorySlim | Story>;
 
 export class ReleaseNotesGenerator {
 	private issueRegex = /\[sc-(\d+)]/gi;
+	private branchIssueRegex = /\bsc-(\d+)/gi;
 
 	constructor(
 		private githubApi: InstanceType<typeof GitHub>,
@@ -124,6 +125,11 @@ export class ReleaseNotesGenerator {
 			yield storyId;
 		}
 
+		for (const storyId of await this.getIssuesFromString(PR.head.ref, this.branchIssueRegex)) {
+			debug(` - Found story ${storyId} in pull request ${PR.number} branch ${PR.head.ref}`);
+			yield storyId;
+		}
+
 		const comments = await this.getPRComments(PR.number);
 
 		for (const comment of comments) {
@@ -134,8 +140,8 @@ export class ReleaseNotesGenerator {
 		}
 	}
 
-	private* getIssuesFromString(string: string) {
-		for (const match of string.matchAll(this.issueRegex)) {
+	private* getIssuesFromString(string: string, regex: RegExp = this.issueRegex) {
+		for (const match of string.matchAll(regex)) {
 			yield parseInt(match[1]) as number;
 		}
 	}
