@@ -20,6 +20,7 @@ class ReleaseNotesGenerator {
         this.base = base;
         this.templates = templates;
         this.issueRegex = /\[sc-(\d+)]/gi;
+        this.branchIssueRegex = /\bsc-(\d+)/gi;
     }
     async generate() {
         (0, core_1.debug)(`Starting release notes generation`);
@@ -109,6 +110,10 @@ class ReleaseNotesGenerator {
             (0, core_1.debug)(` - Found story ${storyId} in pull request ${PR.number} title/body`);
             yield storyId;
         }
+        for (const storyId of await this.getIssuesFromString(PR.head.ref, this.branchIssueRegex)) {
+            (0, core_1.debug)(` - Found story ${storyId} in pull request ${PR.number} branch ${PR.head.ref}`);
+            yield storyId;
+        }
         const comments = await this.getPRComments(PR.number);
         for (const comment of comments) {
             for (const storyId of await this.getIssuesFromString(comment.body)) {
@@ -117,8 +122,8 @@ class ReleaseNotesGenerator {
             }
         }
     }
-    *getIssuesFromString(string) {
-        for (const match of string.matchAll(this.issueRegex)) {
+    *getIssuesFromString(string, regex = this.issueRegex) {
+        for (const match of string.matchAll(regex)) {
             yield parseInt(match[1]);
         }
     }
@@ -17386,7 +17391,7 @@ class ReleaseNotesAction {
         (0, core_1.info)("Update release notes to release");
     }
 }
-const action = new ReleaseNotesAction((0, github_1.getOctokit)((0, core_1.getInput)('github-token')), new client_1.ShortcutClient((0, core_1.getInput)('clubhouse-token')), (0, core_1.getInput)("repository-owner"), (0, core_1.getInput)("repository-name"), {
+const action = new ReleaseNotesAction((0, github_1.getOctokit)((0, core_1.getInput)('github-token')), new client_1.ShortcutClient((0, core_1.getInput)('shortcut-token') || (0, core_1.getInput)('clubhouse-token')), (0, core_1.getInput)("repository-owner"), (0, core_1.getInput)("repository-name"), {
     releasenotes: (0, core_1.getInput)("releasenotes-template"),
     noStories: (0, core_1.getInput)("no-stories-template"),
 });

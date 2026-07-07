@@ -81,7 +81,7 @@ class ReleaseNotesAction {
 
 const action = new ReleaseNotesAction(
 	getOctokit(getInput('github-token')),
-	new ShortcutClient(getInput('clubhouse-token')),
+	new ShortcutClient(getInput('shortcut-token') || getInput('clubhouse-token')),
 	getInput("repository-owner"),
 	getInput("repository-name"),
 	{
